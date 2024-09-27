@@ -1,0 +1,17 @@
+services:
+  postgres_db:
+    image: postgres:latest
+    container_name: library_demo_postgres_container
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: oQ6_E265NrJSha-Zq2K1
+      POSTGRES_DB: librarydemodb
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+    driver: local
