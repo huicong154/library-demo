@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.example</groupId>
-	<artifactId>library-demo</artifactId>
+	<artifactId>librarydemo</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>library-demo</name>
+	<name>librarydemo</name>
 	<description>Aeon Assessment</description>
 	<url/>
 	<licenses>

@@ -1,4 +1,4 @@
-package com.example.library_demo.model;
+package com.example.librarydemo.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
