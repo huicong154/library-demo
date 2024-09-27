@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 @Entity
 public class Borrower {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
     @NotBlank(message = "Name is mandatory")
