@@ -18,6 +18,11 @@ public class Book {
     @NotBlank(message = "Author is mandatory")
     private String author;
 
+    // Foreign key reference to Borrower
+    @ManyToOne
+    @JoinColumn(name = "borrower_id", referencedColumnName = "id")
+    private Borrower borrower;
+
     public Long getId() {
         return id;
     }
@@ -44,5 +49,13 @@ public class Book {
 
     public void setAuthor(String author) {
         this.author = author;
+    }
+
+    public Borrower getBorrower() {
+        return borrower;
+    }
+
+    public void setBorrower(Borrower borrower) {
+        this.borrower = borrower;
     }
 }
