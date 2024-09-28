@@ -76,7 +76,9 @@ public class LibraryController {
     }
 
     @GetMapping("/borrowers")
-    public ResponseEntity<List<Borrower>> getAllBorrowers() {
-        return new ResponseEntity<>(libraryService.getAllBorrowers(), HttpStatus.OK);
+    public ResponseEntity<Page<Borrower>> getAllBorrowers(@RequestParam(defaultValue = "0") int page,
+                                                          @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return new ResponseEntity<>(libraryService.getAllBorrowers(pageable), HttpStatus.OK);
     }
 }

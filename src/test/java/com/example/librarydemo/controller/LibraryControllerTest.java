@@ -15,7 +15,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -35,13 +34,41 @@ public class LibraryControllerTest {
     public void testRegisterBorrower() {
         Borrower borrower = new Borrower();
         borrower.setName("Oliver Bennett");
-        borrower.setEmail("john.doe@example.com");
+        borrower.setEmail("oliver.bennett@maildemo.com");
         when(libraryService.registerBorrower(any(Borrower.class))).thenReturn(borrower);
 
         ResponseEntity<Borrower> response = libraryController.registerBorrower(borrower);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(borrower, response.getBody());
+    }
+
+    @Test
+    public void testGetAllBorrowers() {
+        Borrower borrower1 = new Borrower();
+        borrower1.setName("Oliver Bennett");
+        borrower1.setEmail("oliver.bennett@maildemo.com");
+
+        Borrower borrower2 = new Borrower();
+        borrower2.setName("Oliver Smith");
+        borrower2.setEmail("oliver.smith@maildemo.com");
+
+        List<Borrower> borrowers = Arrays.asList(borrower1, borrower2);
+        Pageable pageable = PageRequest.of(0, 10); // First page with 10 items per page
+        Page<Borrower> pagedBorrowers = new PageImpl<>(borrowers, pageable, borrowers.size());
+
+        when(libraryService.getAllBorrowers(any(Pageable.class))).thenReturn(pagedBorrowers);
+
+        // When
+        ResponseEntity<Page<Borrower>> response = libraryController.getAllBorrowers(0, 10);
+
+        // Then
+        assertEquals(HttpStatus.OK, response.getStatusCode()); // Check HTTP status
+        assertEquals(2, response.getBody().getTotalElements()); // Total number of borrowers
+        assertEquals(1, response.getBody().getTotalPages());   // Total number of pages
+        assertEquals(2, response.getBody().getContent().size()); // Number of borrowers in the current page
+        assertEquals(borrower1, response.getBody().getContent().get(0)); // First borrower in the content
+        assertEquals(borrower2, response.getBody().getContent().get(1)); // Second borrower in the content
     }
 
     @Test

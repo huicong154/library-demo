@@ -25,8 +25,8 @@ public class LibraryService {
         return borrowerRepository.save(borrower);
     }
 
-    public List<Borrower> getAllBorrowers() {
-        return borrowerRepository.findAll();
+    public Page<Borrower> getAllBorrowers(Pageable pageable) {
+        return borrowerRepository.findAll(pageable);
     }
 
     public Book registerBook(Book book) {
