@@ -48,7 +48,7 @@ public class LibraryControllerTest {
 
         when(libraryService.registerBook(any(Book.class))).thenReturn(book);
 
-        ResponseEntity<Book> response = libraryController.registerBook(book);
+        ResponseEntity<?> response = libraryController.registerBook(book);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(book, response.getBody());

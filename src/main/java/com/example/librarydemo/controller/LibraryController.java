@@ -1,5 +1,6 @@
 package com.example.librarydemo.controller;
 
+import com.example.librarydemo.response.SimpleErrorResponse;
 import com.example.librarydemo.model.Book;
 import com.example.librarydemo.model.Borrower;
 import com.example.librarydemo.service.LibraryService;
@@ -14,7 +15,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/library")
 public class LibraryController {
-    @Autowired private LibraryService libraryService;
+    @Autowired
+    private LibraryService libraryService;
 
     @PostMapping("/borrowers")
     public ResponseEntity<Borrower> registerBorrower(@Valid @RequestBody Borrower borrower) {
@@ -22,8 +24,14 @@ public class LibraryController {
     }
 
     @PostMapping("/books")
-    public ResponseEntity<Book> registerBook(@Valid @RequestBody Book book) {
-        return new ResponseEntity<>(libraryService.registerBook(book), HttpStatus.CREATED);
+    public ResponseEntity<?> registerBook(@Valid @RequestBody Book book) {
+        try {
+            Book registeredBook = libraryService.registerBook(book);
+            return new ResponseEntity<>(registeredBook, HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new SimpleErrorResponse(e.getMessage(), HttpStatus.CONFLICT.value()));
+        }
     }
 
     @GetMapping("/books")
