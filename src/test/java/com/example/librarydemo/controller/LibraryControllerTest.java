@@ -8,10 +8,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -56,18 +61,31 @@ public class LibraryControllerTest {
 
     @Test
     public void testGetAllBooks() {
-        List<Book> books = new ArrayList<>();
-
         Book book1 = new Book();
         book1.setIsbn("1988575060");
+        book1.setTitle("Hell Yeah Or No");
+        book1.setAuthor("Derek Sivers");
 
-        books.add(book1);
+        Book book2 = new Book();
+        book2.setIsbn("978-1991152336");
+        book2.setTitle("How to Live");
+        book2.setAuthor("Derek Sivers");
 
-        when(libraryService.getAllBooks()).thenReturn(books);
+        List<Book> books = Arrays.asList(book1, book2);
+        Pageable pageable = PageRequest.of(0, 10); // First page with 10 items per page
+        Page<Book> pagedBooks = new PageImpl<>(books, pageable, books.size());
 
-        ResponseEntity<List<Book>> response = libraryController.getAllBooks();
+        when(libraryService.getAllBooks(any(Pageable.class))).thenReturn(pagedBooks);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(books.size(), response.getBody().size());
+        // When
+        ResponseEntity<Page<Book>> response = libraryController.getAllBooks(0, 10);
+
+        // Then
+        assertEquals(HttpStatus.OK, response.getStatusCode()); // Check HTTP status
+        assertEquals(2, response.getBody().getTotalElements()); // Total number of books
+        assertEquals(1, response.getBody().getTotalPages());   // Total number of pages
+        assertEquals(2, response.getBody().getContent().size()); // Number of books in the current page
+        assertEquals(book1, response.getBody().getContent().get(0)); // First book in the content
+        assertEquals(book2, response.getBody().getContent().get(1)); // Second book in the content
     }
 }

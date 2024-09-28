@@ -8,6 +8,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Arrays;
 import java.util.List;
@@ -70,9 +74,20 @@ public class LibraryServiceTest {
         book2.setTitle("How to Live");
         book2.setAuthor("Derek Sivers");
 
-        when(bookRepository.findAll()).thenReturn(Arrays.asList(book1, book2));
+        List<Book> books = Arrays.asList(book1, book2);
+        Pageable pageable = PageRequest.of(0, 10); // First page with 10 items per page
+        Page<Book> pagedBooks = new PageImpl<>(books, pageable, books.size());
 
-        List<Book> books = libraryService.getAllBooks();
-        assertEquals(2, books.size());
+        when(bookRepository.findAll(any(Pageable.class))).thenReturn(pagedBooks);
+
+        // When
+        Page<Book> result = libraryService.getAllBooks(pageable);
+
+        // Then
+        assertEquals(2, result.getTotalElements()); // Total number of books
+        assertEquals(1, result.getTotalPages());   // Total number of pages
+        assertEquals(2, result.getContent().size()); // Number of books in the current page
+        assertEquals(book1, result.getContent().get(0)); // First book in the content
+        assertEquals(book2, result.getContent().get(1)); // Second book in the content
     }
 }
