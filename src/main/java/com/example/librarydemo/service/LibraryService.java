@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class LibraryService {
@@ -22,6 +23,11 @@ public class LibraryService {
     private BorrowerRepository borrowerRepository;
 
     public Borrower registerBorrower(Borrower borrower) {
+        // Check if a borrower with the same email already exists
+        Optional<Borrower> existingBorrower = borrowerRepository.findByEmail(borrower.getEmail());
+        if (existingBorrower.isPresent()) {
+            throw new IllegalArgumentException("A borrower with this email already exists.");
+        }
         return borrowerRepository.save(borrower);
     }
 
@@ -61,15 +67,13 @@ public class LibraryService {
                 .orElseThrow(() -> new IllegalArgumentException("Book not found"));
 
         // Check if the book is already borrowed
-        // Check if the book is already borrowed
         if (book.getBorrower() != null) {
-            throw new IllegalStateException("The book is currently borrowed and cannot be borrowed by another borrower.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "The book is currently borrowed and cannot be borrowed by another borrower.");
         }
 
         // Set the borrower for the book (indicating it is borrowed)
         book.setBorrower(borrower);
-
-        // Save the updated book information
         return bookRepository.save(book);
     }
 
@@ -85,8 +89,6 @@ public class LibraryService {
 
         // Set the borrower to null (indicating it is returned)
         book.setBorrower(null);
-
-        // Save the updated book information
         return bookRepository.save(book);
     }
 

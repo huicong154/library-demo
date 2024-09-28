@@ -27,6 +27,8 @@ public class Book {
         return id;
     }
 
+    public void setId(long l) {}
+
     public String getIsbn() {
         return isbn;
     }

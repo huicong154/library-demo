@@ -23,8 +23,14 @@ public class LibraryController {
     private LibraryService libraryService;
 
     @PostMapping("/borrowers")
-    public ResponseEntity<Borrower> registerBorrower(@Valid @RequestBody Borrower borrower) {
-        return new ResponseEntity<>(libraryService.registerBorrower(borrower), HttpStatus.CREATED);
+    public ResponseEntity<?> registerBorrower(@Valid @RequestBody Borrower borrower) {
+        try {
+            Borrower registeredBorrower = libraryService.registerBorrower(borrower);
+            return new ResponseEntity<>(registeredBorrower, HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new SimpleErrorResponse(e.getMessage(), HttpStatus.CONFLICT.value()));
+        }
     }
 
     @PostMapping("/books")
@@ -46,9 +52,9 @@ public class LibraryController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new SimpleErrorResponse(e.getMessage(), HttpStatus.NOT_FOUND.value()));
-        } catch (IllegalStateException e) {  // Handle IllegalStateException for borrowing a booked-out item
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(new SimpleErrorResponse(e.getMessage(), HttpStatus.FORBIDDEN.value()));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new SimpleErrorResponse(e.getReason(), HttpStatus.FORBIDDEN.value()));
         }
     }
 

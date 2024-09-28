@@ -14,12 +14,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,12 +37,31 @@ public class LibraryControllerTest {
         Borrower borrower = new Borrower();
         borrower.setName("Oliver Bennett");
         borrower.setEmail("oliver.bennett@maildemo.com");
+
         when(libraryService.registerBorrower(any(Borrower.class))).thenReturn(borrower);
 
-        ResponseEntity<Borrower> response = libraryController.registerBorrower(borrower);
+        ResponseEntity<?> response = libraryController.registerBorrower(borrower);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(borrower, response.getBody());
+    }
+
+    @Test
+    public void testRegisterBorrowerWithExistingEmail() {
+        Borrower existingBorrower = new Borrower();
+        existingBorrower.setName("Oliver Bennett");
+        existingBorrower.setEmail("oliver.bennett@maildemo.com");
+
+        Borrower newBorrower = new Borrower();
+        newBorrower.setName("Oliver Smith");
+        newBorrower.setEmail("oliver.bennett@maildemo.com"); // Same email as existing
+
+        when(libraryService.registerBorrower(any(Borrower.class)))
+                .thenThrow(new IllegalArgumentException("A borrower with this email already exists."));
+
+        ResponseEntity<?> response = libraryController.registerBorrower(newBorrower);
+
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
     }
 
     @Test
@@ -59,10 +80,8 @@ public class LibraryControllerTest {
 
         when(libraryService.getAllBorrowers(any(Pageable.class))).thenReturn(pagedBorrowers);
 
-        // When
         ResponseEntity<Page<Borrower>> response = libraryController.getAllBorrowers(0, 10);
 
-        // Then
         assertEquals(HttpStatus.OK, response.getStatusCode()); // Check HTTP status
         assertEquals(2, response.getBody().getTotalElements()); // Total number of borrowers
         assertEquals(1, response.getBody().getTotalPages());   // Total number of pages
@@ -104,15 +123,104 @@ public class LibraryControllerTest {
 
         when(libraryService.getAllBooks(any(Pageable.class))).thenReturn(pagedBooks);
 
-        // When
         ResponseEntity<Page<Book>> response = libraryController.getAllBooks(0, 10);
 
-        // Then
         assertEquals(HttpStatus.OK, response.getStatusCode()); // Check HTTP status
         assertEquals(2, response.getBody().getTotalElements()); // Total number of books
         assertEquals(1, response.getBody().getTotalPages());   // Total number of pages
         assertEquals(2, response.getBody().getContent().size()); // Number of books in the current page
         assertEquals(book1, response.getBody().getContent().get(0)); // First book in the content
         assertEquals(book2, response.getBody().getContent().get(1)); // Second book in the content
+    }
+
+    @Test
+    public void testBorrowBook() {
+        Borrower borrower = new Borrower();
+        borrower.setId(1L);
+        borrower.setName("Oliver Bennett");
+        borrower.setEmail("oliver.bennett@maildemo.com");
+
+        Book book = new Book();
+        book.setId(1L);
+        book.setIsbn("1988575060");
+        book.setTitle("Hell Yeah Or No");
+        book.setAuthor("Derek Sivers");
+
+        when(libraryService.borrowBook(anyLong(), anyLong())).thenReturn(book);
+
+        ResponseEntity<?> response = libraryController.borrowBook(1L, 1L);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(book, response.getBody());
+    }
+
+    @Test
+    public void testBorrowBookWhenNotFound() {
+        // Simulate that the borrower or book is not found.
+        when(libraryService.borrowBook(anyLong(), anyLong()))
+                .thenThrow(new IllegalArgumentException("Borrower not found"));
+
+        ResponseEntity<?> response = libraryController.borrowBook(1L, 1L);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    public void testBorrowBookWhenAlreadyBorrowed() {
+        // Simulate that the book is already borrowed.
+        when(libraryService.borrowBook(anyLong(), anyLong()))
+                .thenThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "The book is currently borrowed and cannot be borrowed by another borrower."));
+
+        ResponseEntity<?> response = libraryController.borrowBook(1L, 1L);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    public void testReturnBook() {
+        Borrower borrower = new Borrower();
+        borrower.setId(1L);
+        borrower.setName("Oliver Bennett");
+        borrower.setEmail("oliver.bennett@maildemo.com");
+
+        Book book = new Book();
+        book.setId(1L);
+        book.setIsbn("1988575060");
+        book.setTitle("Hell Yeah Or No");
+        book.setAuthor("Derek Sivers");
+        book.setBorrower(borrower);
+
+        when(libraryService.returnBook(anyLong())).thenReturn(book);
+
+        ResponseEntity<?> response = libraryController.returnBook(1L);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(book, response.getBody());
+    }
+
+    @Test
+    public void testReturnBookWhenNotBorrowed() {
+        Book book = new Book();
+        book.setId(1L);
+        book.setIsbn("1988575060");
+        book.setTitle("Hell Yeah Or No");
+        book.setAuthor("Derek Sivers");
+
+        when(libraryService.returnBook(anyLong()))
+                .thenThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "The book is not currently borrowed."));
+
+        ResponseEntity<?> response = libraryController.returnBook(1L);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    public void testReturnBookWhenNotFound() {
+        when(libraryService.returnBook(anyLong()))
+                .thenThrow(new IllegalArgumentException("Book not found"));
+
+        ResponseEntity<?> response = libraryController.returnBook(1L);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 }
