@@ -41,8 +41,8 @@ public class LibraryService {
 
         // If there are existing books with the same ISBN, check title and author
         for (Book existingBook : existingBooks) {
-            if (!existingBook.getTitle().equals(book.getTitle()) ||
-                    !existingBook.getAuthor().equals(book.getAuthor())) {
+            if (!existingBook.getTitle().equalsIgnoreCase(book.getTitle()) ||
+                    !existingBook.getAuthor().equalsIgnoreCase(book.getAuthor())) {
                 throw new IllegalArgumentException("A book with this ISBN already exists with a different title and author.");
             }
         }
