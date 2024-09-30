@@ -22,7 +22,7 @@ public class LibraryController {
     @Autowired
     private LibraryService libraryService;
 
-    @PostMapping("/borrowers")
+    @PostMapping("/borrower")
     public ResponseEntity<?> registerBorrower(@Valid @RequestBody Borrower borrower) {
         try {
             Borrower registeredBorrower = libraryService.registerBorrower(borrower);
@@ -33,7 +33,7 @@ public class LibraryController {
         }
     }
 
-    @PostMapping("/books")
+    @PostMapping("/book")
     public ResponseEntity<?> registerBook(@Valid @RequestBody Book book) {
         try {
             Book registeredBook = libraryService.registerBook(book);

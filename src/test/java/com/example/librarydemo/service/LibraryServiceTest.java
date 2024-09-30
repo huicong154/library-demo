@@ -90,6 +90,29 @@ public class LibraryServiceTest {
     }
 
     @Test
+    public void testRegisterBookWithDuplicateISBN() {
+        Book book1 = new Book();
+        book1.setIsbn("1988575060");
+        book1.setTitle("Hell Yeah Or No");
+        book1.setAuthor("Derek Sivers");;
+
+        Book book2 = new Book();
+        book2.setIsbn("1988575060");
+        book2.setTitle("Hell No or Yeah");
+        book2.setAuthor("Derek Sivers");
+
+        when(bookRepository.findByIsbn(any(String.class))).thenReturn(List.of(book1));
+
+        // Expect an IllegalArgumentException to be thrown due to duplicate ISBN but title or author does not match
+        // rule violation
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            libraryService.registerBook(book2);
+        });
+
+        assertEquals("A book with this ISBN already exists with a different title and author.", exception.getMessage());
+    }
+
+    @Test
     public void testGetAllBooks() {
         Book book1 = new Book();
         book1.setIsbn("1988575060");
